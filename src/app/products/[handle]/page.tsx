@@ -4,6 +4,7 @@ import AddToCartButton from "@/components/AddToCartButton";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
+export const dynamicParams = true;
 
 interface ProductPageProps {
   params: Promise<{ handle: string }>;
@@ -20,8 +21,12 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 }
 
 export async function generateStaticParams() {
-  const products = await getProducts(50);
-  return products.map((p) => ({ handle: p.handle }));
+  try {
+    const products = await getProducts(50);
+    return products.map((p) => ({ handle: p.handle }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function ProductPage({ params }: ProductPageProps) {

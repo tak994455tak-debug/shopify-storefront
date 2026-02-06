@@ -4,6 +4,7 @@ import ProductCard from "@/components/ProductCard";
 import type { Metadata } from "next";
 
 export const revalidate = 60;
+export const dynamicParams = true;
 
 interface CollectionPageProps {
   params: Promise<{ handle: string }>;
@@ -20,8 +21,12 @@ export async function generateMetadata({ params }: CollectionPageProps): Promise
 }
 
 export async function generateStaticParams() {
-  const collections = await getCollections(20);
-  return collections.map((c) => ({ handle: c.handle }));
+  try {
+    const collections = await getCollections(20);
+    return collections.map((c) => ({ handle: c.handle }));
+  } catch {
+    return [];
+  }
 }
 
 export default async function CollectionPage({ params }: CollectionPageProps) {

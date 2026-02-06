@@ -34,7 +34,6 @@ export async function shopifyFetch<T>(
     "Content-Type": "application/json",
   };
 
-  // Use token-based auth if token is available, otherwise tokenless access
   if (storefrontAccessToken && storefrontAccessToken !== "your-storefront-access-token") {
     headers["X-Shopify-Storefront-Access-Token"] = storefrontAccessToken;
   }
@@ -168,63 +167,78 @@ const CART_FRAGMENT = `
 export async function getProducts(first: number = 20): Promise<Product[]> {
   if (!isConfigured()) return [];
 
-  const query = `
-    ${PRODUCT_FRAGMENT}
-    query GetProducts($first: Int!) {
-      products(first: $first, sortKey: BEST_SELLING) {
-        edges {
-          node {
-            ...ProductFields
-          }
-        }
-      }
-    }
-  `;
-  const data = await shopifyFetch<{ products: { edges: { node: Product }[] } }>(
-    query,
-    { first }
-  );
-  return data.products.edges.map((edge) => edge.node);
-}
-
-export async function getProduct(handle: string): Promise<Product | null> {
-  if (!isConfigured()) return null;
-
-  const query = `
-    ${PRODUCT_FRAGMENT}
-    query GetProduct($handle: String!) {
-      product(handle: $handle) {
-        ...ProductFields
-      }
-    }
-  `;
-  const data = await shopifyFetch<{ product: Product | null }>(query, {
-    handle,
-  });
-  return data.product;
-}
-
-export async function searchProducts(searchQuery: string, first: number = 20): Promise<Product[]> {
-  if (!isConfigured()) return [];
-
-  const query = `
-    ${PRODUCT_FRAGMENT}
-    query SearchProducts($query: String!, $first: Int!) {
-      search(query: $query, first: $first, types: PRODUCT) {
-        edges {
-          node {
-            ... on Product {
+  try {
+    const query = `
+      ${PRODUCT_FRAGMENT}
+      query GetProducts($first: Int!) {
+        products(first: $first, sortKey: BEST_SELLING) {
+          edges {
+            node {
               ...ProductFields
             }
           }
         }
       }
-    }
-  `;
-  const data = await shopifyFetch<{
-    search: { edges: { node: Product }[] };
-  }>(query, { query: searchQuery, first });
-  return data.search.edges.map((edge) => edge.node);
+    `;
+    const data = await shopifyFetch<{ products: { edges: { node: Product }[] } }>(
+      query,
+      { first }
+    );
+    return data.products.edges.map((edge) => edge.node);
+  } catch (error) {
+    console.error("Failed to fetch products:", error);
+    return [];
+  }
+}
+
+export async function getProduct(handle: string): Promise<Product | null> {
+  if (!isConfigured()) return null;
+
+  try {
+    const query = `
+      ${PRODUCT_FRAGMENT}
+      query GetProduct($handle: String!) {
+        product(handle: $handle) {
+          ...ProductFields
+        }
+      }
+    `;
+    const data = await shopifyFetch<{ product: Product | null }>(query, {
+      handle,
+    });
+    return data.product;
+  } catch (error) {
+    console.error("Failed to fetch product:", error);
+    return null;
+  }
+}
+
+export async function searchProducts(searchQuery: string, first: number = 20): Promise<Product[]> {
+  if (!isConfigured()) return [];
+
+  try {
+    const query = `
+      ${PRODUCT_FRAGMENT}
+      query SearchProducts($query: String!, $first: Int!) {
+        search(query: $query, first: $first, types: PRODUCT) {
+          edges {
+            node {
+              ... on Product {
+                ...ProductFields
+              }
+            }
+          }
+        }
+      }
+    `;
+    const data = await shopifyFetch<{
+      search: { edges: { node: Product }[] };
+    }>(query, { query: searchQuery, first });
+    return data.search.edges.map((edge) => edge.node);
+  } catch (error) {
+    console.error("Failed to search products:", error);
+    return [];
+  }
 }
 
 // ============================================
@@ -234,63 +248,73 @@ export async function searchProducts(searchQuery: string, first: number = 20): P
 export async function getCollections(first: number = 20): Promise<Collection[]> {
   if (!isConfigured()) return [];
 
-  const query = `
-    query GetCollections($first: Int!) {
-      collections(first: $first) {
-        edges {
-          node {
-            id
-            handle
-            title
-            description
-            image {
-              url
-              altText
-              width
-              height
+  try {
+    const query = `
+      query GetCollections($first: Int!) {
+        collections(first: $first) {
+          edges {
+            node {
+              id
+              handle
+              title
+              description
+              image {
+                url
+                altText
+                width
+                height
+              }
             }
           }
         }
       }
-    }
-  `;
-  const data = await shopifyFetch<{
-    collections: { edges: { node: Collection }[] };
-  }>(query, { first });
-  return data.collections.edges.map((edge) => edge.node);
+    `;
+    const data = await shopifyFetch<{
+      collections: { edges: { node: Collection }[] };
+    }>(query, { first });
+    return data.collections.edges.map((edge) => edge.node);
+  } catch (error) {
+    console.error("Failed to fetch collections:", error);
+    return [];
+  }
 }
 
 export async function getCollection(handle: string): Promise<Collection | null> {
   if (!isConfigured()) return null;
 
-  const query = `
-    ${PRODUCT_FRAGMENT}
-    query GetCollection($handle: String!) {
-      collection(handle: $handle) {
-        id
-        handle
-        title
-        description
-        image {
-          url
-          altText
-          width
-          height
-        }
-        products(first: 50) {
-          edges {
-            node {
-              ...ProductFields
+  try {
+    const query = `
+      ${PRODUCT_FRAGMENT}
+      query GetCollection($handle: String!) {
+        collection(handle: $handle) {
+          id
+          handle
+          title
+          description
+          image {
+            url
+            altText
+            width
+            height
+          }
+          products(first: 50) {
+            edges {
+              node {
+                ...ProductFields
+              }
             }
           }
         }
       }
-    }
-  `;
-  const data = await shopifyFetch<{ collection: Collection | null }>(query, {
-    handle,
-  });
-  return data.collection;
+    `;
+    const data = await shopifyFetch<{ collection: Collection | null }>(query, {
+      handle,
+    });
+    return data.collection;
+  } catch (error) {
+    console.error("Failed to fetch collection:", error);
+    return null;
+  }
 }
 
 // ============================================
